@@ -1,3 +1,5 @@
-idf_component_register(SRCS "main.cpp"
-                       PRIV_REQUIRES spi_flash esp_pm
-                       INCLUDE_DIRS "")
+idf_component_register(
+    SRCS "main.cpp"
+    PRIV_REQUIRES fatfs
+    INCLUDE_DIRS ""
+)
