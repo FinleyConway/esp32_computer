@@ -47,7 +47,7 @@ public:
     void init() {
         init_lcd();
         init_touch();
-        init_lvgl();
+        //init_lvgl();
         set_backlight(true);
     }
 

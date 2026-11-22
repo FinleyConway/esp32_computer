@@ -11,11 +11,13 @@
 
 class video_buffer {
 public:
-    explicit video_buffer(display& display) : 
-        m_display(display)
-    {
-    }
+    explicit video_buffer(display& display) : m_display(display) {}
+    ~video_buffer() { deinit(); }
 
+    video_buffer(const video_buffer&) = delete;
+    video_buffer& operator=(const video_buffer&) = delete;
+
+public:
     bool init() {
         constexpr uint8_t bytes_per_pixel = 2;
         constexpr size_t buffer_size = 
@@ -36,6 +38,20 @@ public:
         config.output_type = JPEG_PIXEL_FORMAT_RGB565_BE;
 
         return jpeg_dec_open(&config, &m_handle) == JPEG_ERR_OK;
+    }
+
+    void deinit() {
+        if (m_handle) {
+            jpeg_dec_close(m_handle);
+            m_handle = nullptr;
+        }
+
+        for (auto& buffer : m_buffer) {
+            if (buffer != nullptr) {
+                jpeg_free_align(buffer);
+                buffer = nullptr;
+            }
+        }
     }
 
     void on_frame(std::span<uint8_t> jpeg) {

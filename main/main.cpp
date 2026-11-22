@@ -1,12 +1,10 @@
-#include <cstdio>
-
 #include "button.hpp"
 #include "storage/sd_card.hpp"
 
 #include "display/display.hpp"
 #include "display/display_lock.hpp"
+#include "video_player/video_player.hpp"
 
-button button;
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/05_lvgl_example/main/main.c
 
@@ -31,19 +29,21 @@ button button;
 //     }, LV_EVENT_CLICKED, nullptr);
 // }
 
-
+//button button;
+sd_card sd_card;
+display display;
+video_player video_player(display);
 
 extern "C" void app_main(void) {
     // ESP_ERROR_CHECK(button.create());
     // ESP_ERROR_CHECK(button.subscribe(button::event::press_down, [] {
-    //     printf("hello\n");
     // }));
 
+    sd_card.mount();
 
-    // sd_card sd_card;
-
-    // static display display;
-    // display.init();
+    display.init();
+    video_player.init();
+    video_player.play("/sd_card/goat.avi");
     
     // display_lock lock;
     // build_ui();
