@@ -3,7 +3,8 @@
 #include "button.hpp"
 #include "sd_card.hpp"
 
-#include "display.hpp"
+#include "display/display.hpp"
+#include "display/display_lock.hpp"
 
 // gpio 0 boot
 // gpio 5 power
@@ -44,11 +45,8 @@ extern "C" void app_main(void) {
     // sd_card sd_card;
 
     static display display;
-    display.init_lcd();
-    display.init_touch();
-    display.init_lvgl();
+    display.init();
 
-    lvgl_port_lock(0); 
+    display_lock lock;
     build_ui();
-    lvgl_port_unlock();
 }
