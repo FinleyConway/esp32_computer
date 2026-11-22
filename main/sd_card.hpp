@@ -8,16 +8,9 @@
 #include <driver/gpio.h>
 #include <driver/sdmmc_host.h>
 
-// https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/04_sd_card_test/main/sd_card_example_main.c
+#include "pinout.hpp"
 
-struct sd_card_gpio {
-    static constexpr gpio_num_t clk = GPIO_NUM_16;
-    static constexpr gpio_num_t cmd = GPIO_NUM_15;
-    static constexpr gpio_num_t d0  = GPIO_NUM_17;
-    static constexpr gpio_num_t d1  = GPIO_NUM_18;
-    static constexpr gpio_num_t d2  = GPIO_NUM_13;
-    static constexpr gpio_num_t d3  = GPIO_NUM_14;
-};
+// https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/04_sd_card_test/main/sd_card_example_main.c
 
 class sd_card {
 public:
