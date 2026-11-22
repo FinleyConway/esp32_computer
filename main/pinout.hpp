@@ -4,6 +4,12 @@
 
 // https://docs.waveshare.com/ESP32-S3-Touch-LCD-1.54#pinout-definition
 
+struct button_gpio {
+    static constexpr gpio_num_t boot = GPIO_NUM_0;
+    static constexpr gpio_num_t power = GPIO_NUM_5;
+    static constexpr gpio_num_t plus = GPIO_NUM_4;
+};
+
 struct sd_card_gpio {
     static constexpr gpio_num_t clk = GPIO_NUM_16;
     static constexpr gpio_num_t cmd = GPIO_NUM_15;

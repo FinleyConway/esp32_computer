@@ -6,9 +6,6 @@
 #include "display/display.hpp"
 #include "display/display_lock.hpp"
 
-// gpio 0 boot
-// gpio 5 power
-// gpio 4 plus
 button button;
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/05_lvgl_example/main/main.c
