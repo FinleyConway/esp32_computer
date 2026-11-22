@@ -1,4 +1,18 @@
 dependencies:
+  espressif/avi_player:
+    component_hash: abe07cedb7e90c4eebfd4cf93825727d5ed341f065bb2e2932d33d648b4474a7
+    dependencies:
+    - name: espressif/cmake_utilities
+      registry_url: https://components.espressif.com
+      require: private
+      version: '*'
+    - name: idf
+      require: private
+      version: '>=4.4'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 2.0.0
   espressif/button:
     component_hash: 26345e8700d3c6435925f9a8f246d224f9c1b99f937c243fe400844eec514b4a
     dependencies:
@@ -61,6 +75,25 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 2.9.0
+  espressif/esp_new_jpeg:
+    component_hash: e1e7e6991193c41ed6c9fc386702aa7821433319e7aa9c3147cd3236310cd69c
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    targets:
+    - esp32
+    - esp32s2
+    - esp32s3
+    - esp32s31
+    - esp32p4
+    - esp32c2
+    - esp32c3
+    - esp32c5
+    - esp32c6
+    - esp32c61
+    - esp32h4
+    version: 1.0.2
   idf:
     source:
       type: idf
@@ -73,11 +106,13 @@ dependencies:
       type: service
     version: 9.5.0
 direct_dependencies:
+- espressif/avi_player
 - espressif/button
 - espressif/esp_lcd_touch_cst816s
 - espressif/esp_lvgl_port
+- espressif/esp_new_jpeg
 - idf
 - lvgl/lvgl
-manifest_hash: 9dfab02dd88f1b39719f9c986f95b7675b107f4be20e3e19a0ec41d7ad7c03c2
+manifest_hash: b62f41a0e43e6c92f441735bfa32612e4fc40e2af32e27a647cb00b016c75f3a
 target: esp32s3
 version: 3.0.0

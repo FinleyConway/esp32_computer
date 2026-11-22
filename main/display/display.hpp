@@ -55,6 +55,10 @@ public:
         gpio_set_level(display_gpio::bl, on); 
     }
 
+    void draw_pixels(uint8_t start_x, uint8_t start_y, uint8_t end_x, uint8_t end_y, const void* data) {
+        esp_lcd_panel_draw_bitmap(m_panel, start_x, start_y, end_x, end_y, data);
+    }
+
 private:
     void init_lcd() {
         spi_bus_config_t bus = {};
