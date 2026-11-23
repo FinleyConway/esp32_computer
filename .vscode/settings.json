@@ -2,7 +2,7 @@
   "C_Cpp.intelliSenseEngine": "disabled",
   "clangd.arguments": [
     "--compile-commands-dir=${workspaceFolder}/build",
-    "--query-driver=/var/home/finley/.devcontainer/.espressif/tools/**/bin/*-elf-*",
+      "--query-driver=${env:HOME}/.espressif/tools/**/bin/*-gcc",
     "--background-index",
     "--header-insertion=never"
   ],

@@ -1,2 +1,22 @@
 CompileFlags:
-    Remove: [-f*, -m*]
+  CompilationDatabase: build
+  Remove:
+    - -f*
+    - -m*
+    - -march=*
+    - -mabi=*
+
+Diagnostics:
+  Suppress:
+    - pp_file_not_found        
+    - drv_unknown_argument
+    - unknown_attribute
+  UnusedIncludes: None
+  ClangTidy:
+    Remove:
+      - bugprone-easily-swappable-parameters
+      - readability-magic-numbers
+      - modernize-use-trailing-return-type
+
+Index:
+  Background: Build
