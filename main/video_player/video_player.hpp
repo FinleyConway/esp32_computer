@@ -4,6 +4,8 @@
 
 #include <esp_err.h>
 #include <avi_player.h>
+#include <freertos/task.h>
+#include <freertos/FreeRTOS.h>
 
 #include "../storage/sd_card.hpp"
 #include "../video_player/video_buffer.hpp"
@@ -19,6 +21,10 @@ public:
     bool init() {
         if (m_handle != nullptr) return true;  
         if (!m_buffer.init()) return false;
+
+        if (xTaskCreate(&video_player::worker_entry, "vp_worker", 3072, this, 4, &m_worker) != pdPASS) {
+            return false;
+        }
 
         avi_player_config_t config = {};
         config.buffer_size     = 64 * 1024;
@@ -36,6 +42,12 @@ public:
 
         if (err != ESP_OK) {
             ESP_LOGE(c_tag, "avi_player_init failed: %s", esp_err_to_name(err));
+
+            vTaskDelete(m_worker);
+
+            m_handle = nullptr;
+            m_worker = nullptr;
+
             return false;
         }
 
@@ -49,6 +61,11 @@ public:
             stop();
             avi_player_deinit(m_handle);
             m_handle = nullptr;
+        }
+
+        if (m_worker != nullptr) {
+            vTaskDelete(m_worker);
+            m_worker = nullptr;
         }
 
         m_buffer.deinit();
@@ -135,8 +152,45 @@ private:
 
     static void on_end(void* arg) {
         auto& self = *static_cast<video_player*>(arg);
-        
-        self.m_state = state::idle;
+
+        // loop at the start of the video naturally
+        if (self.m_state.load() == state::playing) {
+            xTaskNotifyGive(self.m_worker);
+        }
+        // stopped manuallt 
+        else {
+            self.m_state = state::idle;
+        }
+    }
+
+    static void worker_entry(void* arg) {
+        static_cast<video_player*>(arg)->worker_loop();
+    }
+
+    void worker_loop() {
+        for (;;) {
+            ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+            restart();
+        }
+    }
+
+    void restart() {
+        // give the player task time to return to its ready state
+        // the player doesnt give a responce when its ready so this feels hacky
+        vTaskDelay(pdMS_TO_TICKS(20));
+
+        if (m_state.load() != state::playing) {
+            m_state = state::idle;
+            return;
+        }
+
+        const esp_err_t err = avi_player_play_from_memory(
+            m_handle, m_video.data.get(), m_video.size);
+
+        if (err != ESP_OK) {
+            ESP_LOGE(c_tag, "loop restart failed: %s", esp_err_to_name(err));
+            m_state = state::idle;  
+        }
     }
 
 private:
@@ -144,6 +198,7 @@ private:
 
     file_data m_video;
     video_buffer m_buffer;
+    TaskHandle_t m_worker = nullptr;
     avi_player_handle_t m_handle = nullptr;
     std::atomic<state> m_state{state::idle};
 };
