@@ -29,15 +29,24 @@
 //     }, LV_EVENT_CLICKED, nullptr);
 // }
 
-//button button;
+button play_button;
+button stop_button;
+
 sd_card sd_card;
 display display;
 video_player video_player(display);
 
 extern "C" void app_main(void) {
-    // ESP_ERROR_CHECK(button.create());
-    // ESP_ERROR_CHECK(button.subscribe(button::event::press_down, [] {
-    // }));
+    ESP_ERROR_CHECK(play_button.create(button_gpio::boot));
+    ESP_ERROR_CHECK(stop_button.create(button_gpio::plus));
+
+    ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {
+        video_player.replay();
+    }));    
+
+    ESP_ERROR_CHECK(stop_button.subscribe(button::event::press_down, [] {
+        video_player.stop();
+    }));
 
     sd_card.mount();
 
@@ -48,7 +57,7 @@ extern "C" void app_main(void) {
 
     if (file.has_value()) 
         video_player.play(std::move(file.value()));
-    
+            
     // display_lock lock;
     // build_ui();
 }

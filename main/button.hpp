@@ -35,10 +35,10 @@ public:
     using callback = void (*)();
 
 public:
-    esp_err_t create() {
+    esp_err_t create(gpio_num_t button_gpio) {
         const button_config_t btn_cfg{};
         const button_gpio_config_t gpio_cfg = {
-            .gpio_num          = m_gpio, // TODO: Need to pass in gpio
+            .gpio_num          = button_gpio, 
             .active_level      = 0,
             .enable_power_save = true,
             .disable_pull      = false,
@@ -99,7 +99,6 @@ private:
     static constexpr const char* c_tag = "button";
     static constexpr uint8_t c_max_events = BUTTON_EVENT_MAX;
 
-    int32_t m_gpio = 0;
     button_handle_t m_handle = nullptr;
     std::array<callback, c_max_events> m_events{};
 };
