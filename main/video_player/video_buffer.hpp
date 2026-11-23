@@ -112,5 +112,5 @@ private:
     display& m_display;
     jpeg_dec_handle_t m_handle = nullptr;
     size_t m_buffer_index = 0;
-    std::array<uint8_t*, 2> m_buffer;
+    std::array<uint8_t*, 2> m_buffer{};
 };

@@ -115,6 +115,7 @@ private:
     static void on_end(void* arg)  {
         auto& self = *static_cast<video_player*>(arg);
 
+        self.m_playing = false;    
         self.replay();
     }
 
