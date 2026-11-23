@@ -43,7 +43,11 @@ extern "C" void app_main(void) {
 
     display.init();
     video_player.init();
-    video_player.play("/sd_card/goat.avi");
+
+    auto file = sd_card.load_file_to_psram("/sd_card/goat.avi");
+
+    if (file.has_value()) 
+        video_player.play(std::move(file.value()));
     
     // display_lock lock;
     // build_ui();

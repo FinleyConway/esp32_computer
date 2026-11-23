@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <cstdio>
+#include <expected>
 #include <string_view>
 
 #include <esp_err.h>
@@ -11,6 +14,21 @@
 #include "../pinout.hpp"
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/04_sd_card_test/main/sd_card_example_main.c
+
+struct psram_deleter {
+    void operator()(uint8_t *p) const { heap_caps_free(p); }
+};
+using psram_buffer = std::unique_ptr<uint8_t[], psram_deleter>;
+
+struct file_closer {
+    void operator()(std::FILE *f) const { if (f) std::fclose(f); }
+};
+using file_ptr = std::unique_ptr<std::FILE, file_closer>;
+
+struct file_data {
+    psram_buffer data;
+    size_t size = 0;
+};
 
 class sd_card {
 public:
@@ -91,6 +109,60 @@ public:
     std::string_view mount_point() const {
         return "/sd_card";
     };
+
+public:
+    std::expected<file_data, esp_err_t> load_file_to_psram(std::string_view path) {
+        if (!mounted()) return std::unexpected(ESP_ERR_INVALID_STATE);
+
+        file_ptr file(std::fopen(path.data(), "rb"));
+
+        // cant open file
+        if (file == nullptr) {
+            ESP_LOGE(c_tag, "open failed: %s", path.data());
+            return std::unexpected(ESP_ERR_NOT_FOUND);
+        }
+
+        // get the size of the file
+        std::fseek(file.get(), 0, SEEK_END);
+        const long size = std::ftell(file.get());
+        std::fseek(file.get(), 0, SEEK_SET);
+
+        if (size <= 0) {
+            ESP_LOGE(c_tag, "empty or unreadable file: %s", path.data());
+            return std::unexpected(ESP_ERR_INVALID_SIZE);
+        }
+
+        // allocate a buffer to write into
+        psram_buffer buffer(static_cast<uint8_t *>(
+            heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT))
+        );
+
+        // not enough memory to allocate file into psram
+        if (buffer == nullptr) {
+            ESP_LOGE(c_tag, "not enough PSRAM for %ld bytes", size);
+            return std::unexpected(ESP_ERR_NO_MEM);
+        }
+
+        // start reading file into memory
+        constexpr size_t chunk_read = 32 * 1024;
+        const size_t file_size = static_cast<size_t>(size);
+        size_t total = 0;
+
+        while (total < file_size) {
+            const size_t want = std::min(chunk_read, file_size - total);
+            const size_t got = std::fread(buffer.get() + total, 1, want, file.get());
+            if (got == 0) break;
+            total += got;
+        }
+
+        // check if we have fully copied the data into memory
+        if (total != file_size) {
+            ESP_LOGE(c_tag, "short read: %u / %u", (unsigned)total, (unsigned)file_size);
+            return std::unexpected(ESP_FAIL);
+        }
+
+        return file_data{ std::move(buffer), total };
+    }
 
 private:
     static constexpr const char* c_tag = "cd_card";

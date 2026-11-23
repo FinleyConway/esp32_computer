@@ -72,7 +72,7 @@ public:
         constexpr uint8_t height = display_info::height; 
         
         // make sure that video is within the display size
-        if (info.width != width || info.height != height) {
+        if (info.width > width || info.height > height) {
             ESP_LOGE(
                 c_tag, 
                 "video is %dx%d, expected %dx%d or smaller",
@@ -80,7 +80,6 @@ public:
             );
             return;
         }
-        
 
         // get the current buffer
         uint8_t* out = m_buffer[m_buffer_index];

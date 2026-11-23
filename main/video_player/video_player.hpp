@@ -1,12 +1,11 @@
 #pragma once
 
-#include <span>
 #include <atomic>
-#include <string_view>
 
 #include <esp_err.h>
 #include <avi_player.h>
 
+#include "../storage/sd_card.hpp"
 #include "../video_player/video_buffer.hpp"
 
 class video_player {
@@ -42,7 +41,7 @@ public:
     }
 
     void deinit() {
-        if (m_handle) {
+        if (m_handle != nullptr) {
             stop();
             avi_player_deinit(m_handle);
             m_handle = nullptr;
@@ -51,15 +50,32 @@ public:
         m_buffer.deinit();
     }
 
-    bool play(std::string_view path) {
-        if (!m_handle) return false;
+    bool play(file_data&& video) {
+        if (m_handle == nullptr) return false;
 
-        m_ended = false;
+        m_video = std::move(video);
         m_playing = true;
-        
-        const esp_err_t err = avi_player_play_from_file(m_handle, path.data());
+
+        const esp_err_t err = avi_player_play_from_memory(m_handle, m_video.data.get(), m_video.size);
         if (err != ESP_OK) {
-            ESP_LOGE(c_tag, "play failed (%s): %s", path, esp_err_to_name(err));
+            ESP_LOGE(c_tag, "play failed video: %s", esp_err_to_name(err));
+
+            m_playing = false;
+
+            return false;
+        }
+
+        return true;
+    }
+
+    bool replay() {
+        if (m_handle == nullptr) return false;
+
+        m_playing = true;
+
+        const esp_err_t err = avi_player_play_from_memory(m_handle, m_video.data.get(), m_video.size);
+        if (err != ESP_OK) {
+            ESP_LOGE(c_tag, "play failed video: %s", esp_err_to_name(err));
 
             m_playing = false;
 
@@ -71,14 +87,12 @@ public:
 
     void stop() {
         m_playing = false;         
-                      
+
         if (m_handle != nullptr) avi_player_play_stop(m_handle);   
     }
 
     bool playing() const { return m_playing; }
     
-    bool ended() const { return m_ended; }
-
 private:
     static void on_video(frame_data_t* frame, void* arg) {
         auto& self = *static_cast<video_player*>(arg);
@@ -101,15 +115,14 @@ private:
     static void on_end(void* arg)  {
         auto& self = *static_cast<video_player*>(arg);
 
-        // temp solution maybe for loop?
-        self.play("/sd_card/goat.avi");
+        self.replay();
     }
 
 private:
     static constexpr const char* c_tag = "video_player";
 
+    file_data m_video;
     video_buffer m_buffer;
     avi_player_handle_t m_handle = nullptr;
     std::atomic<bool> m_playing = false;
-    std::atomic<bool> m_ended = false;
 };
