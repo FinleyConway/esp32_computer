@@ -11,8 +11,8 @@
 #include <esp_lcd_panel_st7789.h>
 #include <esp_lcd_touch_cst816s.h>
 
-#include "../i2c_bus.hpp"
-#include "../pinout.hpp"
+#include "../io/i2c_bus.hpp"
+#include "../io/pinout.hpp"
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/05_lvgl_example/main/main.c
 

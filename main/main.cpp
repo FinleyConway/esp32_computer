@@ -1,10 +1,11 @@
-#include "button.hpp"
-#include "storage/sd_card.hpp"
+#include "core/display/display.hpp"
+#include "core/display/display_lock.hpp"
+#include "core/io/pinout.hpp"
+#include "core/button.hpp"
+#include "core/sd_card.hpp"
 
-#include "display/display.hpp"
-#include "display/display_lock.hpp"
+
 #include "video_player/video_player.hpp"
-
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/05_lvgl_example/main/main.c
 

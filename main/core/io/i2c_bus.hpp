@@ -4,6 +4,7 @@
 
 #include <driver/i2c_master.h>
 
+#include "i2c_bus.hpp"
 #include "pinout.hpp"
 
 struct i2c {

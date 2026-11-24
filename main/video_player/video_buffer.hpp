@@ -7,7 +7,7 @@
 
 #include <esp_jpeg_dec.h>
 
-#include "../display/display.hpp"
+#include "../core/display/display.hpp"
 
 class video_buffer {
 public:
