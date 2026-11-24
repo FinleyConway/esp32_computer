@@ -30,22 +30,21 @@
 // }
 
 button play_button;
-button stop_button;
 
 sd_card sd_card;
 display display;
 video_player video_player(display);
 
 extern "C" void app_main(void) {
-    ESP_ERROR_CHECK(play_button.create(button_gpio::boot));
-    ESP_ERROR_CHECK(stop_button.create(button_gpio::plus));
+    ESP_ERROR_CHECK(play_button.create(button_gpio::power));
 
     ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {
-        video_player.replay();
-    }));    
-
-    ESP_ERROR_CHECK(stop_button.subscribe(button::event::press_down, [] {
-        video_player.stop();
+        if (video_player.playing()) {
+            video_player.stop();
+        }
+        else {
+            video_player.replay();
+        }
     }));
 
     sd_card.mount();

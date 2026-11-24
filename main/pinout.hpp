@@ -29,8 +29,11 @@ struct display_gpio {
 };
 
 struct touch_gpio {
-    static constexpr gpio_num_t sda  = GPIO_NUM_42;
-    static constexpr gpio_num_t scl  = GPIO_NUM_41;
     static constexpr gpio_num_t intt = GPIO_NUM_48;
     static constexpr gpio_num_t rst  = GPIO_NUM_47;
+};
+
+struct i2c_gpio {
+    static constexpr gpio_num_t sda  = GPIO_NUM_42;
+    static constexpr gpio_num_t scl  = GPIO_NUM_41;
 };

@@ -11,6 +11,7 @@
 #include <esp_lcd_panel_st7789.h>
 #include <esp_lcd_touch_cst816s.h>
 
+#include "../i2c_bus.hpp"
 #include "../pinout.hpp"
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/05_lvgl_example/main/main.c
@@ -30,11 +31,6 @@ struct display_info {
     // lvgl draw buffers
     static constexpr uint16_t draw_buffer_height = 50;
     static constexpr uint32_t draw_buffer_pixels = width * draw_buffer_height;
-
-    // touch i2c
-    //!! gonna need to move this some where else as audio and imu also uses the same bus
-    static constexpr i2c_port_num_t touch_i2c_port = I2C_NUM_0;
-    static constexpr uint32_t touch_i2c_hz         = 400 * 1000;
 };
 
 class display {
@@ -101,14 +97,7 @@ private:
     }
 
     void init_touch() {
-        i2c_master_bus_config_t bus_cfg = {};
-        bus_cfg.i2c_port          = display_info::touch_i2c_port;
-        bus_cfg.sda_io_num        = touch_gpio::sda;
-        bus_cfg.scl_io_num        = touch_gpio::scl;
-        bus_cfg.clk_source        = I2C_CLK_SRC_DEFAULT;
-        bus_cfg.glitch_ignore_cnt = 7;
-        bus_cfg.flags.enable_internal_pullup = 1;
-        ESP_ERROR_CHECK(i2c_new_master_bus(&bus_cfg, &m_i2c_bus));
+        m_i2c_bus = i2c_bus::get();
 
         esp_lcd_panel_io_i2c_config_t io_cfg = {};
         io_cfg.dev_addr             = ESP_LCD_TOUCH_IO_I2C_CST816S_ADDRESS;
@@ -117,7 +106,7 @@ private:
         io_cfg.lcd_cmd_bits         = 8;
         io_cfg.lcd_param_bits       = 0;
         io_cfg.flags.disable_control_phase = 1;
-        io_cfg.scl_speed_hz         = display_info::touch_i2c_hz;
+        io_cfg.scl_speed_hz         = i2c::hz;
         ESP_ERROR_CHECK(esp_lcd_new_panel_io_i2c(m_i2c_bus, &io_cfg, &m_tp_io));
 
         esp_lcd_touch_config_t tp_cfg = {};
