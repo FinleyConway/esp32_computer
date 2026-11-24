@@ -119,9 +119,13 @@ public:
         return m_is_mute;
     }
 
-    void set_volume(uint8_t volume) {
+    int8_t get_volume() const {
+        return m_volume;
+    }
+
+    void set_volume(int8_t volume) {
         if (m_handle != nullptr) {
-            m_volume = std::clamp<uint8_t>(volume, 0, 100);
+            m_volume = std::clamp<int8_t>(volume, 0, 100);
 
             esp_codec_dev_set_out_vol(
                 m_handle, 
@@ -148,7 +152,7 @@ private:
     esp_codec_dev_handle_t m_handle = nullptr;
 
     bool m_is_mute = false;
-    uint8_t m_volume = 50; // default to half volume
+    int8_t m_volume = 50; // default to half volume
     uint32_t m_rate = 16000;
     uint32_t m_bits = 16;
     uint32_t m_channels = 2;

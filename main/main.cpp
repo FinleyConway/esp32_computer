@@ -33,6 +33,7 @@
 
 button play_button;
 button volume_button;
+button video_selc_button;
 
 sd_card sd_card;
 
@@ -40,30 +41,53 @@ display display;
 audio audio;
 video_player video_player(display, audio);
 
-extern "C" void app_main(void) {
-    ESP_ERROR_CHECK(play_button.create(button_gpio::power));
+uint8_t volume_increment = 10;
+bool volume_mode = true;
+
+void handle_buttons() {
     ESP_ERROR_CHECK(volume_button.create(button_gpio::boot));
+    ESP_ERROR_CHECK(play_button.create(button_gpio::power));
+    ESP_ERROR_CHECK(video_selc_button.create(button_gpio::plus));
 
-    ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {
-        if (video_player.playing()) {
-            video_player.stop();
-        }
-        else {
-            video_player.replay();
-        }
-    }));
-
-    ESP_ERROR_CHECK(volume_button.subscribe(button::event::press_down, [] {
+    ESP_ERROR_CHECK(volume_button.subscribe(button::event::single_click, [] {
         audio.mute(audio.is_mute() ? false : true);
     }));
+    ESP_ERROR_CHECK(volume_button.subscribe(button::event::press_down, [] {
+        volume_mode = true;
+    }));
+    ESP_ERROR_CHECK(volume_button.subscribe(button::event::press_up, [] {
+        volume_mode = false;
+    }));
 
+    ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {
+        if (volume_mode) {
+            audio.set_volume(audio.get_volume() - volume_increment);
+        }
+        else {
+            if (video_player.playing()) {
+                video_player.stop();
+            }
+            else {
+                video_player.replay();
+            }
+        }
+    }));
+
+    ESP_ERROR_CHECK(video_selc_button.subscribe(button::event::press_down, [] {
+        if (volume_mode) {
+            audio.set_volume(audio.get_volume() + volume_increment);
+        }
+    }));
+}
+
+extern "C" void app_main(void) {
     sd_card.mount();
-
     display.init();
     audio.init();
     audio.set_volume(0);
-
     video_player.init();
+
+    handle_buttons();
 
     auto file = sd_card.load_file_to_psram("/sd_card/goat.avi");
 
