@@ -32,6 +32,7 @@
 // }
 
 button play_button;
+button volume_button;
 
 sd_card sd_card;
 
@@ -41,6 +42,7 @@ video_player video_player(display, audio);
 
 extern "C" void app_main(void) {
     ESP_ERROR_CHECK(play_button.create(button_gpio::power));
+    ESP_ERROR_CHECK(volume_button.create(button_gpio::boot));
 
     ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {
         if (video_player.playing()) {
@@ -51,10 +53,16 @@ extern "C" void app_main(void) {
         }
     }));
 
+    ESP_ERROR_CHECK(volume_button.subscribe(button::event::press_down, [] {
+        audio.mute(audio.is_mute() ? false : true);
+    }));
+
     sd_card.mount();
 
     display.init();
     audio.init();
+    audio.set_volume(0);
+
     video_player.init();
 
     auto file = sd_card.load_file_to_psram("/sd_card/goat.avi");

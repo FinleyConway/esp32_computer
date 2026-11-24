@@ -4,9 +4,8 @@
 #include <algorithm>
 
 #include <esp_check.h>
-#include "driver/i2c_master.h"
-#include "driver/i2s_std.h"
 #include <esp_codec_dev.h>
+#include <driver/i2s_std.h>
 #include <esp_codec_dev_defaults.h>
 
 #include "io/i2c_bus.hpp"
@@ -75,8 +74,6 @@ public:
         fs.bits_per_sample = m_bits;
         if (esp_codec_dev_open(m_handle, &fs) != ESP_CODEC_DEV_OK) return ESP_FAIL;
 
-        esp_codec_dev_set_out_vol(m_handle, m_volume);
-
         return ESP_OK;
     }
 
@@ -103,6 +100,23 @@ public:
         esp_codec_dev_set_out_vol(m_handle, m_volume);
 
         return ESP_OK;
+    }
+
+    void mute(bool mute) {
+        if (m_handle == nullptr) return;
+
+        m_is_mute = mute;
+
+        if (mute) {
+            esp_codec_dev_set_out_vol(m_handle, 0);
+        }
+        else {
+            esp_codec_dev_set_out_vol(m_handle, m_volume);
+        }
+    }
+
+    bool is_mute() const {
+        return m_is_mute;
     }
 
     void set_volume(uint8_t volume) {
@@ -133,6 +147,7 @@ private:
     i2s_chan_handle_t m_rx = nullptr;
     esp_codec_dev_handle_t m_handle = nullptr;
 
+    bool m_is_mute = false;
     uint8_t m_volume = 50; // default to half volume
     uint32_t m_rate = 16000;
     uint32_t m_bits = 16;
