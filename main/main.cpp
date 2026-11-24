@@ -34,18 +34,12 @@
 button play_button;
 
 sd_card sd_card;
+
 display display;
-video_player video_player(display);
 audio audio;
+video_player video_player(display, audio);
 
 extern "C" void app_main(void) {
-    audio.init();
-    static int16_t tone[16000 * 2];   // 1 s stereo at 16 kHz
-    for (int i = 0; i < 16000; i++) {
-        tone[2*i] = tone[2*i+1] = (int16_t)(8000 * std::sinf(2 * 3.14 * 1000 * i / 16000.0f));
-    }
-    audio.play(tone);
-
     ESP_ERROR_CHECK(play_button.create(button_gpio::power));
 
     ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {
@@ -60,6 +54,7 @@ extern "C" void app_main(void) {
     sd_card.mount();
 
     display.init();
+    audio.init();
     video_player.init();
 
     auto file = sd_card.load_file_to_psram("/sd_card/goat.avi");

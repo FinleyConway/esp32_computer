@@ -19,16 +19,16 @@ public:
     audio& operator=(const audio&) = delete;
 
 public:
-    esp_err_t init(uint32_t sample_rate = 16000, uint8_t channels = 2) {
+    esp_err_t init() {
         i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
         chan_cfg.auto_clear = true; 
         ESP_RETURN_ON_ERROR(i2s_new_channel(&chan_cfg, &m_tx, &m_rx), "audio", "i2s_new_channel");
 
         i2s_std_config_t std_cfg = {};
-        std_cfg.clk_cfg  = I2S_STD_CLK_DEFAULT_CONFIG(sample_rate);
+        std_cfg.clk_cfg  = I2S_STD_CLK_DEFAULT_CONFIG(m_rate);
         std_cfg.slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(
             I2S_DATA_BIT_WIDTH_16BIT,
-            channels == 1 ? I2S_SLOT_MODE_MONO : I2S_SLOT_MODE_STEREO
+            m_channels == 1 ? I2S_SLOT_MODE_MONO : I2S_SLOT_MODE_STEREO
         );
         std_cfg.gpio_cfg.mclk = audio_gpio::mclk;
         std_cfg.gpio_cfg.bclk = audio_gpio::sclk;
@@ -70,29 +70,59 @@ public:
         if (!m_handle) return ESP_FAIL;
 
         esp_codec_dev_sample_info_t fs = {};
-        fs.sample_rate     = sample_rate;
-        fs.channel         = channels;
-        fs.bits_per_sample = 16;
+        fs.sample_rate     = m_rate;
+        fs.channel         = m_channels;
+        fs.bits_per_sample = m_bits;
         if (esp_codec_dev_open(m_handle, &fs) != ESP_CODEC_DEV_OK) return ESP_FAIL;
 
-        esp_codec_dev_set_out_vol(m_handle, 60);
+        esp_codec_dev_set_out_vol(m_handle, m_volume);
 
         return ESP_OK;
     }
 
-    void set_volume(int vol) {
+    esp_err_t reconfigure(uint32_t sample_rate, uint8_t bits, uint8_t channels) {
+        if (m_handle == nullptr) return ESP_ERR_INVALID_STATE;
+
+        if (sample_rate == m_rate && bits == m_bits && channels == m_channels) {
+            return ESP_OK;  
+        }
+
+        esp_codec_dev_close(m_handle);
+
+        esp_codec_dev_sample_info_t fs = {};
+        fs.sample_rate     = sample_rate;
+        fs.channel         = channels;
+        fs.bits_per_sample = bits;
+
+        if (esp_codec_dev_open(m_handle, &fs) != ESP_CODEC_DEV_OK) return ESP_FAIL;
+
+        m_rate = sample_rate; 
+        m_bits = bits; 
+        m_channels = channels;
+
+        esp_codec_dev_set_out_vol(m_handle, m_volume);
+
+        return ESP_OK;
+    }
+
+    void set_volume(uint8_t volume) {
         if (m_handle != nullptr) {
-            esp_codec_dev_set_out_vol(m_handle, std::clamp(vol, 0, 100));
+            m_volume = std::clamp<uint8_t>(volume, 0, 100);
+
+            esp_codec_dev_set_out_vol(
+                m_handle, 
+                m_volume
+            );
         }
     }
 
-    esp_err_t play(std::span<int16_t> samples) {
+    esp_err_t play_bytes(std::span<uint8_t> bytes) {
         if (m_handle == nullptr) return ESP_ERR_INVALID_STATE;
 
         const int r = esp_codec_dev_write(
             m_handle,
-            samples.data(),
-            samples.size_bytes()
+            bytes.data(),
+            bytes.size_bytes()
         );
 
         return r == ESP_CODEC_DEV_OK ? ESP_OK : ESP_FAIL;
@@ -102,4 +132,10 @@ private:
     i2s_chan_handle_t m_tx = nullptr;
     i2s_chan_handle_t m_rx = nullptr;
     esp_codec_dev_handle_t m_handle = nullptr;
+
+    uint8_t m_volume = 50; // default to half volume
+    uint32_t m_rate = 16000;
+    uint32_t m_bits = 16;
+    uint32_t m_channels = 2;
+
 };

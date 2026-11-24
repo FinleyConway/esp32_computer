@@ -7,12 +7,17 @@
 #include <freertos/task.h>
 #include <freertos/FreeRTOS.h>
 
+#include "../core/audio.hpp"
 #include "../core/sd_card.hpp"
 #include "../video_player/video_buffer.hpp"
 
 class video_player {
 public:
-    explicit video_player(display& display) : m_buffer(display) { }
+    video_player(display& display, audio& audio) : 
+        m_buffer(display),
+        m_audio(audio)
+    {
+    }
 
     video_player(const video_player&) = delete;
     video_player& operator=(const video_player&) = delete;
@@ -29,8 +34,8 @@ public:
         avi_player_config_t config = {};
         config.buffer_size     = 64 * 1024;
         config.video_cb        = &video_player::on_video; 
-        //config.audio_cb        = &video_player::on_audio;      
-        //config.audio_set_clock_cb = &video_player::on_clock;   
+        config.audio_cb        = &video_player::on_audio;      
+        config.audio_set_clock_cb = &video_player::on_clock;   
         config.avi_play_end_cb = &video_player::on_end;
         config.priority        = 5;
         config.coreID          = 1; 
@@ -128,6 +133,18 @@ private:
         return true;
     }
 
+    static void on_clock(uint32_t rate, uint32_t bits, uint32_t ch, void* args) {
+        auto& self = *static_cast<video_player*>(args);
+
+        ESP_ERROR_CHECK(self.m_audio.reconfigure(rate, bits, ch));
+    }
+
+    static void on_audio(frame_data_t* frame, void* args) {
+        auto& self = *static_cast<video_player*>(args);
+
+        ESP_ERROR_CHECK(self.m_audio.play_bytes({ frame->data, frame->data_bytes }));
+    }
+
     static void on_video(frame_data_t* frame, void* arg) {
         auto& self = *static_cast<video_player*>(arg);
 
@@ -198,6 +215,8 @@ private:
 
     file_data m_video;
     video_buffer m_buffer;
+    audio& m_audio;
+
     TaskHandle_t m_worker = nullptr;
     avi_player_handle_t m_handle = nullptr;
     std::atomic<state> m_state{state::idle};
