@@ -3,9 +3,10 @@
 #include "core/io/pinout.hpp"
 #include "core/button.hpp"
 #include "core/sd_card.hpp"
-
+#include "core/audio.hpp"
 
 #include "video_player/video_player.hpp"
+#include <cmath>
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/05_lvgl_example/main/main.c
 
@@ -35,8 +36,16 @@ button play_button;
 sd_card sd_card;
 display display;
 video_player video_player(display);
+audio audio;
 
 extern "C" void app_main(void) {
+    audio.init();
+    static int16_t tone[16000 * 2];   // 1 s stereo at 16 kHz
+    for (int i = 0; i < 16000; i++) {
+        tone[2*i] = tone[2*i+1] = (int16_t)(8000 * std::sinf(2 * 3.14 * 1000 * i / 16000.0f));
+    }
+    audio.play(tone);
+
     ESP_ERROR_CHECK(play_button.create(button_gpio::power));
 
     ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {

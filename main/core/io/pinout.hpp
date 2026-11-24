@@ -33,6 +33,15 @@ struct touch_gpio {
     static constexpr gpio_num_t rst  = GPIO_NUM_47;
 };
 
+struct audio_gpio {
+    static constexpr gpio_num_t pa_ctrl = GPIO_NUM_7;
+    static constexpr gpio_num_t mclk   = GPIO_NUM_8;
+    static constexpr gpio_num_t sclk   = GPIO_NUM_9;
+    static constexpr gpio_num_t lrck    = GPIO_NUM_10;
+    static constexpr gpio_num_t asdout  = GPIO_NUM_11;
+    static constexpr gpio_num_t dsdin   = GPIO_NUM_12;
+};
+
 struct i2c_gpio {
     static constexpr gpio_num_t sda  = GPIO_NUM_42;
     static constexpr gpio_num_t scl  = GPIO_NUM_41;
