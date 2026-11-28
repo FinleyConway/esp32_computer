@@ -5,6 +5,9 @@
 
 class video_player_state {
 public:
+    explicit video_player_state(hardware& hw);
+
+public:
     void init(app_machine& machine);
 
     void deinit(app_machine& machine);

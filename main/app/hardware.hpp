@@ -7,10 +7,10 @@
 #include "core/display/display.hpp"
 
 struct hardware {
-    display display;
-    audio audio;
+    display display_driver;
+    audio audio_driver;
 
-    sd_card sd_card;
+    sd_card storage;
 
     button boot_button;
     button power_button;

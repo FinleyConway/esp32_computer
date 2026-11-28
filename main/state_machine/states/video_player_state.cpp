@@ -1,10 +1,7 @@
-#include "video_player_state.hpp"
+#include "state_machine/states/video_player_state.hpp"
 
-#include "core/audio.hpp"
-#include "core/display/display.hpp"
-
-video_player_state::video_player_state(display& display, audio& audio) :
-    m_player(display, audio)
+video_player_state::video_player_state(hardware& hw) :
+    m_player(hw.display_driver, hw.audio_driver)
 {
 }
 
@@ -17,5 +14,5 @@ void video_player_state::deinit(app_machine& machine) {
 }
 
 void video_player_state::handle_buttons(app_machine& machine) {
-    
+
 }

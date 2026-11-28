@@ -21,7 +21,7 @@ public:
     explicit machine(Ctx& ctx) : m_ctx(ctx) {}
 
     ~machine() {
-        if (started()) visit_current([](auto& s) { s.deinit(); });
+        if (started()) visit_current([this](auto& s) { s.deinit(*this); });
     }
 
 public:
@@ -38,15 +38,18 @@ public:
         static_assert((std::is_same_v<T, Ts> || ...), "T is not in this machine's state list");
 
         // deinit state if state has already started
-        if (started()) visit_current([](auto& s) { s.deinit(); }); 
+        if (started()) visit_current([this](auto& s) { s.deinit(*this); }); 
 
         // destroy old state and construct new state 
         // into varient and start state
-        if constexpr (std::is_constructible_v<T, Ctx&, Args...>)
+        if constexpr (std::is_constructible_v<T, Ctx&, Args...>) {
             m_states.template emplace<T>(m_ctx, std::forward<Args>(args)...);
-        else
-            m_states.template emplace<T>(std::forward<Args>(args)...);                              
-        visit_current([](auto& s) { s.init(); });
+        }
+        else {
+            m_states.template emplace<T>(std::forward<Args>(args)...);
+        }
+
+        visit_current([this](auto& s) { s.init(*this); });
     }
 
     template<typename T>
