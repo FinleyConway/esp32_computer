@@ -32,7 +32,7 @@ public:
         press_end = BUTTON_PRESS_END,
     };
 
-    using callback = void (*)();
+    using callback = void (*)(void* args);
 
 public:
     esp_err_t create(gpio_num_t button_gpio) {
@@ -47,7 +47,7 @@ public:
         return iot_button_new_gpio_device(&btn_cfg, &gpio_cfg, &m_handle);
     }
 
-    esp_err_t subscribe(event event, callback fn) {
+    esp_err_t subscribe(event event, callback fn, void* args = nullptr) {
         const auto event_index = static_cast<size_t>(event);
 
         // recieved an invalid event or null callback
@@ -56,8 +56,8 @@ public:
         }
 
         auto& slot = m_events[event_index];
-        const bool first = slot == nullptr;
-        slot = fn;
+        const bool first = slot.fn == nullptr;
+        slot = { fn, args };
 
         // has the event been registered?
         if (first) {
@@ -72,13 +72,23 @@ public:
 
             // handle when register event fails
             if (err != ESP_OK) {
-                slot = nullptr;
+                slot = {};
 
                 ESP_RETURN_ON_ERROR(err, c_tag, "failed to subscribe button event");
             }
         }
 
         return ESP_OK;
+    }
+
+    void unsubscribe_all() {
+        for (size_t i = 0; i < c_max_events; i++) {
+            if (m_events[i].fn == nullptr) continue;
+
+            iot_button_unregister_cb(m_handle, static_cast<button_event_t>(i), nullptr);
+
+            m_events[i] = {};
+        }
     }
 
 private:
@@ -89,16 +99,22 @@ private:
 
         // check if recieved event is valid and call the callback
         if (event_index < c_max_events) {
-            if (const auto& event = self.m_events[event_index]; event != nullptr) {
-                event();
+            if (const auto& event = self.m_events[event_index]; event.fn != nullptr) {
+                event.fn(event.user);
             }
         }
     }
     
 private:
+    struct slot {
+        callback fn = nullptr;
+        void* user = nullptr;
+    };
+
+private:
     static constexpr const char* c_tag = "button";
     static constexpr uint8_t c_max_events = BUTTON_EVENT_MAX;
 
     button_handle_t m_handle = nullptr;
-    std::array<callback, c_max_events> m_events{};
+    std::array<slot, c_max_events> m_events{};
 };

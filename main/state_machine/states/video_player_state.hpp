@@ -1,5 +1,8 @@
 #pragma once
 
+#include <atomic>
+#include <cstdint>
+
 #include "state_machine/app_machine.hpp"
 #include "video_player/video_player.hpp"
 
@@ -14,44 +17,24 @@ public:
 
 private:
     void handle_buttons(app_machine& machine);
-    // void handle_buttons() {
-    //     ESP_ERROR_CHECK(volume_button.create(button_gpio::boot));
-    //     ESP_ERROR_CHECK(play_button.create(button_gpio::power));
-    //     ESP_ERROR_CHECK(video_selc_button.create(button_gpio::plus));
 
-    //     ESP_ERROR_CHECK(volume_button.subscribe(button::event::single_click, [] {
-    //         audio.mute(audio.is_mute() ? false : true);
-    //     }));
-    //     ESP_ERROR_CHECK(volume_button.subscribe(button::event::press_down, [] {
-    //         volume_mode = true;
-    //     }));
-    //     ESP_ERROR_CHECK(volume_button.subscribe(button::event::press_up, [] {
-    //         volume_mode = false;
-    //     }));
+    void toggle_mute();
+    void enter_volume_mode() { m_volume_mode = true;  }
+    void exit_volume_mode()  { m_volume_mode = false; }
+    void on_play_pressed();
+    void volume_up();
+    void volume_down();
+    void change_volume(int8_t delta);
 
-    //     ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {
-    //         if (volume_mode) {
-    //             audio.set_volume(audio.get_volume() - volume_increment);
-    //         }
-    //         else {
-    //             if (video_player.playing()) {
-    //                 video_player.stop();
-    //             }
-    //             else {
-    //                 video_player.replay();
-    //             }
-    //         }
-    //     }));
-
-    //     ESP_ERROR_CHECK(video_selc_button.subscribe(button::event::press_down, [] {
-    //         if (volume_mode) {
-    //             audio.set_volume(audio.get_volume() + volume_increment);
-    //         }
-    //     }));
-    // }
+    template<void (video_player_state::*Fn)()>
+    static void thunk(void* self) {
+        (static_cast<video_player_state*>(self)->*Fn)();
+    }
 
 private:
+    hardware& m_hw;
     video_player m_player;
-    //uint8_t m_volume_increment = 10;
-    //bool m_volume_mode = false;
+    std::atomic<bool> m_volume_mode{false};
+    
+    static constexpr uint8_t c_volume_increment = 10;
 };

@@ -25,10 +25,6 @@ public:
     }
 
 public:
-    Ctx& ctx() { 
-        return m_ctx; 
-    }
-
     bool started() const { 
         return m_states.index() != 0; 
     }
