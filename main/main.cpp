@@ -5,8 +5,8 @@
 #include "core/sd_card.hpp"
 #include "core/audio.hpp"
 
-#include "video_player/video_player.hpp"
-#include <cmath>
+#include "state_machine/machine.hpp"
+#include "state_machine/states/video_player_state.hpp"
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/05_lvgl_example/main/main.c
 
@@ -39,61 +39,14 @@ sd_card sd_card;
 
 display display;
 audio audio;
-video_player video_player(display, audio);
 
-uint8_t volume_increment = 10;
-bool volume_mode = true;
-
-void handle_buttons() {
-    ESP_ERROR_CHECK(volume_button.create(button_gpio::boot));
-    ESP_ERROR_CHECK(play_button.create(button_gpio::power));
-    ESP_ERROR_CHECK(video_selc_button.create(button_gpio::plus));
-
-    ESP_ERROR_CHECK(volume_button.subscribe(button::event::single_click, [] {
-        audio.mute(audio.is_mute() ? false : true);
-    }));
-    ESP_ERROR_CHECK(volume_button.subscribe(button::event::press_down, [] {
-        volume_mode = true;
-    }));
-    ESP_ERROR_CHECK(volume_button.subscribe(button::event::press_up, [] {
-        volume_mode = false;
-    }));
-
-    ESP_ERROR_CHECK(play_button.subscribe(button::event::press_down, [] {
-        if (volume_mode) {
-            audio.set_volume(audio.get_volume() - volume_increment);
-        }
-        else {
-            if (video_player.playing()) {
-                video_player.stop();
-            }
-            else {
-                video_player.replay();
-            }
-        }
-    }));
-
-    ESP_ERROR_CHECK(video_selc_button.subscribe(button::event::press_down, [] {
-        if (volume_mode) {
-            audio.set_volume(audio.get_volume() + volume_increment);
-        }
-    }));
-}
+machine<video_player_state> states;
 
 extern "C" void app_main(void) {
     sd_card.mount();
     display.init();
     audio.init();
     audio.set_volume(0);
-    video_player.init();
 
-    handle_buttons();
-
-    auto file = sd_card.load_file_to_psram("/sd_card/goat.avi");
-
-    if (file.has_value()) 
-        video_player.play(std::move(file.value()));
-            
-    // display_lock lock;
-    // build_ui();
+    states.set_state<video_player_state>();
 }
