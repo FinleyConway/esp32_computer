@@ -6,15 +6,16 @@
 #include <concepts>
 #include <type_traits>
 
-template<typename T>
-concept state_type = requires (T t) {
-    { t.init()   }  -> std::same_as<void>; // maybe have it so states must be machine aware??
-    { t.deinit() }  -> std::same_as<void>; 
+template<typename T, typename TMachine>
+concept state_type = requires (T t, TMachine& m) {
+    { t.init(m)   }  -> std::same_as<void>; // maybe have it so states must be machine aware??
+    { t.deinit(m) }  -> std::same_as<void>; 
 };
 
-template<state_type... Ts>
+template<typename... Ts>
 class machine {
     static_assert(sizeof...(Ts) > 0, "need atleast one state");
+    static_assert((state_type<Ts, machine> && ...), "state requires init(machine&) and deinit(machine&)");
 
 public:
     ~machine() {
@@ -26,7 +27,7 @@ public:
         return m_states.index() != 0; 
     }
 
-    template<state_type T, typename... Args>
+    template<typename T, typename... Args>
     void set_state(Args&&... args) {
         static_assert((std::is_same_v<T, Ts> || ...), "T is not in this machine's state list");
 
@@ -39,7 +40,7 @@ public:
         visit_current([](auto& s) { s.init(); });
     }
 
-    template<state_type T>
+    template<typename T>
     bool is() const {
         static_assert((std::is_same_v<T, Ts> || ...), "T is not in this machine's state list");
 
@@ -47,10 +48,10 @@ public:
     }
 
 private:
-    template<class F>
-    constexpr void visit_current(F&& f) {
+    template<typename Fn>
+    constexpr void visit_current(Fn&& fn) {
         [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-            ((m_states.index() == Is + 1 ? (f(*std::get_if<Is + 1>(&m_states)), true) : false) || ...);
+            ((m_states.index() == Is + 1 ? (fn(*std::get_if<Is + 1>(&m_states)), true) : false) || ...);
         }(std::index_sequence_for<Ts...>{});
     }
 

@@ -5,7 +5,7 @@
 #include "core/sd_card.hpp"
 #include "core/audio.hpp"
 
-#include "state_machine/machine.hpp"
+#include "state_machine/states.hpp"
 #include "state_machine/states/video_player_state.hpp"
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/05_lvgl_example/main/main.c
@@ -39,8 +39,7 @@ sd_card sd_card;
 
 display display;
 audio audio;
-
-machine<video_player_state> states;
+app_machine states;
 
 extern "C" void app_main(void) {
     sd_card.mount();
@@ -48,5 +47,5 @@ extern "C" void app_main(void) {
     audio.init();
     audio.set_volume(0);
 
-    states.set_state<video_player_state>();
+    states.set_state<video_player_state>(display, audio);
 }

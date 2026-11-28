@@ -4,6 +4,8 @@
 #include "../../core/display/display.hpp"
 #include "../../video_player/video_player.hpp"
 
+#include "../states.hpp"
+
 class video_player_state {
 public:
     video_player_state() = default;
@@ -13,13 +15,9 @@ public:
     // }
 
 public:
-    void init() {
-        //m_video_player.init();
-    }
+    void init(app_machine& machine);
 
-    void deinit() {
-        //m_video_player.deinit();
-    }
+    void deinit(app_machine& machine);
 
 private:
     // void handle_buttons() {
