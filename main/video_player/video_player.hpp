@@ -7,9 +7,9 @@
 #include <freertos/task.h>
 #include <freertos/FreeRTOS.h>
 
-#include "../core/audio.hpp"
-#include "../core/sd_card.hpp"
-#include "../video_player/video_buffer.hpp"
+#include "core/audio.hpp"
+#include "core/sd_card.hpp"
+#include "video_player/video_buffer.hpp"
 
 class video_player {
 public:

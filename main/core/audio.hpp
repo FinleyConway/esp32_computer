@@ -8,8 +8,8 @@
 #include <driver/i2s_std.h>
 #include <esp_codec_dev_defaults.h>
 
-#include "io/i2c_bus.hpp"
-#include "io/pinout.hpp"
+#include "core/io/i2c_bus.hpp"
+#include "core/io/pinout.hpp"
 
 class audio {
 public:

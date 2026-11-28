@@ -11,7 +11,7 @@
 #include <driver/gpio.h>
 #include <driver/sdmmc_host.h>
 
-#include "io/pinout.hpp"
+#include "core/io/pinout.hpp"
 
 // https://github.com/waveshareteam/ESP32-S3-Touch-LCD-1.54/blob/main/examples/ESP32-S3-Touch-LCD-1.54-demo/ESP-IDF-5.5.1/04_sd_card_test/main/sd_card_example_main.c
 
