@@ -12,17 +12,23 @@ concept state_type = requires (T t, TMachine& m) {
     { t.deinit(m) }  -> std::same_as<void>; 
 };
 
-template<typename... Ts>
+template<typename Ctx, typename... Ts>
 class machine {
     static_assert(sizeof...(Ts) > 0, "need atleast one state");
     static_assert((state_type<Ts, machine> && ...), "state requires init(machine&) and deinit(machine&)");
 
 public:
+    explicit machine(Ctx& ctx) : m_ctx(ctx) {}
+
     ~machine() {
         if (started()) visit_current([](auto& s) { s.deinit(); });
     }
 
 public:
+    Ctx& ctx() { 
+        return m_ctx; 
+    }
+
     bool started() const { 
         return m_states.index() != 0; 
     }
@@ -36,7 +42,10 @@ public:
 
         // destroy old state and construct new state 
         // into varient and start state
-        m_states.template emplace<T>(std::forward<Args>(args)...);                                 
+        if constexpr (std::is_constructible_v<T, Ctx&, Args...>)
+            m_states.template emplace<T>(m_ctx, std::forward<Args>(args)...);
+        else
+            m_states.template emplace<T>(std::forward<Args>(args)...);                              
         visit_current([](auto& s) { s.init(); });
     }
 
@@ -57,4 +66,5 @@ private:
 
 private:
     std::variant<std::monostate, Ts...> m_states;
+    Ctx& m_ctx;
 };

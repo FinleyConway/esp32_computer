@@ -1,25 +1,16 @@
 #pragma once
 
-#include "../../core/audio.hpp"
-#include "../../core/display/display.hpp"
-#include "../../video_player/video_player.hpp"
-
-#include "../states.hpp"
+#include "state_machine/app_machine.hpp"
+#include "video_player/video_player.hpp"
 
 class video_player_state {
-public:
-    video_player_state() = default;
-    // video_player_state(display& display, audio& audio) :
-    //     m_video_player(display, audio)
-    // {
-    // }
-
 public:
     void init(app_machine& machine);
 
     void deinit(app_machine& machine);
 
 private:
+    void handle_buttons(app_machine& machine);
     // void handle_buttons() {
     //     ESP_ERROR_CHECK(volume_button.create(button_gpio::boot));
     //     ESP_ERROR_CHECK(play_button.create(button_gpio::power));
@@ -57,7 +48,7 @@ private:
     // }
 
 private:
-    // video_player m_video_player;
+    video_player m_player;
     //uint8_t m_volume_increment = 10;
     //bool m_volume_mode = false;
 };
